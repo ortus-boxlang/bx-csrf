@@ -1,22 +1,22 @@
 {
-	"name": "@MODULE_NAME@",
+	"name": "BoxLang CSRF",
 	"version": "@build.version@+@build.number@",
-	"location": "https://downloads.ortussolutions.com/ortussolutions/boxlang-modules/@MODULE_SLUG@/@build.version@/@MODULE_SLUG@-@build.version@.zip",
+	"location": "https://downloads.ortussolutions.com/ortussolutions/boxlang-modules/bx-csrf/@build.version@/bx-csrf-@build.version@.zip",
 	"author": "Ortus Solutions",
-	"homepage": "https://github.com/boxlang-modules/@MODULE_SLUG@",
-	"documentation": "https://github.com/boxlang-modules/@MODULE_SLUG@",
+	"homepage": "https://github.com/boxlang-modules/bx-csrf",
+	"documentation": "https://github.com/boxlang-modules/bx-csrf",
 	"repository": {
 		"type": "git",
-		"URL": "https://github.com/boxlang-modules/@MODULE_SLUG@"
+		"URL": "https://github.com/boxlang-modules/bx-csrf"
 	},
-	"bugs": "https://github.com/boxlang-modules/@MODULE_SLUG@/issues",
-	"slug": "@MODULE_SLUG@",
-	"shortDescription": "Module template for BoxLang modules",
+	"bugs": "https://github.com/boxlang-modules/bx-csrf/issues",
+	"slug": "bx-csrf",
+	"shortDescription": "Contributes Cross-Site Request Forgery Token Functions to BoxLang",
 	"type": "boxlang-modules",
 	"keywords": ["boxlang"],
 	"boxlang": {
 		"minimumVersion": "1.0.0",
-		"moduleName": "@MODULE_REGISTERED_NAME@"
+		"moduleName": "csrf"
 	},
 	"private": false,
 	"license": [
@@ -42,7 +42,6 @@
 		"gradle/**"
 	],
 	"scripts": {
-		"setupTemplate": "task run taskFile=src/build/SetupTemplate.cfc",
 		"onRelease": "publish"
 	}
 }

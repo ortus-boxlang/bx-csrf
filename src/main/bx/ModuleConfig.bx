@@ -36,17 +36,17 @@ class {
 	 * The BoxLang mapping for your module.  All BoxLang modules are registered with an internal
 	 * mapping prefix of : bxModules.{this.mapping}, /bxmodules/{this.mapping}. Ex: bxModules.test, /bxmodules/test
 	 */
-	this.mapping = "test";
+	this.mapping = "csrf";
 
 	/**
 	 * Who built the module
 	 */
-	this.author = "Luis Majano";
+	this.author = "Ortus Solutions";
 
 	/**
 	 * The module description
 	 */
-	this.description = "This module does amazing things";
+	this.description = "Contributes Cross-Site Request Forgery Token Functions to BoxLang";
 
 	/**
 	 * The module web URL
@@ -72,8 +72,16 @@ class {
 		 * Every module has a settings configuration object
 		 */
 		settings = {
-			loadedOn : now(),
-			loadedBy : "Luis Majano"
+			// The cache storage to use can be either a cache ( e.g. `default` ) name or "session" to store the keys within the user session scope
+			"cacheStorage" : "default",
+			// Whether tokens should be rotated automatically. If false the token will be rotated only when the token is requested.
+			"autoRotate" : true,
+			// The interval in minutes to rotate the token if autoRotate is enabled
+			"rotationInterval" : 30,
+			// Whether the the presence of the token should be verified automatically for the verifyMethods
+			"autoVerify" : false,
+			// The methods to verify the token presence, if enabled
+			"verifyMethods" : [ "POST", "PUT", "PATCH", "DELETE" ],
 		};
 
 		/**
@@ -85,33 +93,23 @@ class {
 		 * bxModules.{this.mapping}.{mappingName}
 		 * Ex: bxModules.test.MyObject => bxModules.test.models.MyObject
 		 */
-		objectMappings = {
-			// { name="MyObject", class="models.utilities.MyObject" }
-		}
+		objectMappings = {}
 
 		/**
 		 * DataSources can be defined by a module and they will be registered
 		 * for you in the runtime
 		 */
-		datasources = {
-			// { name="MyDSN", class="coldbox.system.datasources.ColdBoxDataSource", properties={dsn="mydsn"} }
-		};
+		datasources = {};
 
 		/**
 		 * The module interceptors to register into the runtime
 		 */
-		interceptors = [
-			// { class="path.to.Interceptor", properties={} }
-			{ class : "#moduleRecord.invocationPath#.interceptors.Listener", properties : {
-				createdOn : now(),
-				by : "Luis Majano"
-			} }
-		];
+		interceptors = [];
 
 		/**
 		 * A list of custom interception points to register into the runtime
 		 */
-		customInterceptionPoints = [ "onBxTestModule" ];
+		customInterceptionPoints = [];
 	}
 
 	/**
