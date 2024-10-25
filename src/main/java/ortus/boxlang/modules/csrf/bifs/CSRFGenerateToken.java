@@ -88,9 +88,15 @@ public class CSRFGenerateToken extends BIF {
 		Key assignment = Key.of( tokenKey );
 
 		if ( forceNew || !activeTokens.containsKey( assignment ) ) {
-			IStruct tokenStruct = Struct.of(
+			Long	rotationInterval	= LongCaster.cast( moduleSettings.get( ModuleKeys.rotationInterval ) );
+			Boolean	rotationEnabled		= rotationInterval.equals( 0l );
+			IStruct	tokenStruct			= Struct.of(
 			    Key.token, generateNewToken( requestContext, sessionId.toString(), tokenKey, getRealIP( requestContext ) ),
-			    Key.expires, new DateTime().modify( "m", LongCaster.cast( moduleSettings.get( ModuleKeys.rotationInterval ) ) ).toISOString()
+			    Key.expires,
+			    new DateTime().modify(
+			        rotationEnabled ? "m" : "yyyy",
+			        rotationEnabled ? LongCaster.cast( moduleSettings.get( ModuleKeys.rotationInterval ) ) : 15
+			    ).toISOString()
 			);
 			activeTokens.put( assignment, tokenStruct );
 			cacheProvider.set( cacheKey, activeTokens );

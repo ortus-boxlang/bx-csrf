@@ -14,11 +14,21 @@
  */
 package ortus.boxlang.modules.csrf.interceptors;
 
+import ortus.boxlang.modules.csrf.ModuleKeys;
 import ortus.boxlang.runtime.BoxRuntime;
+import ortus.boxlang.runtime.context.IBoxContext;
+import ortus.boxlang.runtime.dynamic.casters.BooleanCaster;
+import ortus.boxlang.runtime.dynamic.casters.StringCaster;
+import ortus.boxlang.runtime.dynamic.casters.StructCaster;
 import ortus.boxlang.runtime.events.BaseInterceptor;
 import ortus.boxlang.runtime.events.InterceptionPoint;
 import ortus.boxlang.runtime.scopes.Key;
+import ortus.boxlang.runtime.types.Array;
 import ortus.boxlang.runtime.types.IStruct;
+import ortus.boxlang.runtime.types.Struct;
+import ortus.boxlang.runtime.types.exceptions.BoxRuntimeException;
+import ortus.boxlang.runtime.types.util.BLCollector;
+import ortus.boxlang.web.context.WebRequestBoxContext;
 
 /**
  * Listens to when sessions get created to manipulate them for CFML compatibility
@@ -37,18 +47,50 @@ public class CSRFVerifier extends BaseInterceptor {
 	@InterceptionPoint
 	public void onRequest( IStruct interceptData ) {
 
-		if ( !moduleSettings.getAsBoolean( Key.of( "autoVerify" ) ) ) {
+		if ( !moduleSettings.getAsBoolean( ModuleKeys.autoVerify ) ) {
 			return;
 		}
 
-		// TODO: Implement auto-verification
+		IBoxContext context = ( IBoxContext ) interceptData.get( Key.context );
 
-		// Struct.of(
-		// "context", context,
-		// "args", args,
-		// "application", this.application,
-		// "listener", this
-		// )
+		if ( ! ( context instanceof WebRequestBoxContext ) ) {
+			return;
+		}
+
+		WebRequestBoxContext	webContext		= ( WebRequestBoxContext ) context;
+
+		IStruct					requestData		= StructCaster.cast( runtime.getFunctionService()
+		    .getGlobalFunction( ModuleKeys.getHTTPRequestData )
+		    .invoke(
+		        context,
+		        Struct.of(),
+		        false,
+		        ModuleKeys.getHTTPRequestData
+		    ) );
+		Key						checkHeader		= Key.of( moduleSettings.getAsString( ModuleKeys.headerName ) );
+		Array					checkMethods	= moduleSettings.getAsArray( ModuleKeys.verifyMethods )
+		    .stream()
+		    .map( StringCaster::cast )
+		    .map( String::toUpperCase )
+		    .collect( BLCollector.toArray() );
+		IStruct					requestHeaders	= requestData.getAsStruct( Key.headers );
+
+		if ( checkMethods.contains( requestData.getAsString( Key.method ).toUpperCase() ) && requestHeaders.containsKey( checkHeader ) ) {
+			boolean verified = BooleanCaster.cast( runtime.getFunctionService()
+			    .getGlobalFunction( ModuleKeys.CSRFVerifyToken )
+			    .invoke(
+			        webContext,
+			        Struct.of(
+			            Key.token, requestHeaders.getAsString( checkHeader )
+			        ),
+			        false,
+			        ModuleKeys.CSRFVerifyToken
+			    ) );
+			if ( !verified ) {
+				throw new BoxRuntimeException( "The inbound CSRF Token in the header [" + checkHeader.getName() + "] is not valid" );
+			}
+		}
+
 	}
 
 }

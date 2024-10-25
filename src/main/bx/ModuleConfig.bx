@@ -74,12 +74,16 @@ class {
 		settings = {
 			// The cache storage to use can be either a cache ( e.g. `default` ) name or the default "session" to store the keys within the user sessions cache
 			"cacheStorage" : "session",
+			// The duration in minutes to perform a cache reap of expired tokens
+			"reapFrequency" : 1,
 			// Whether tokens should be rotated automatically. If false the token will be rotated only when the token is requested.
 			"autoRotate" : true,
 			// The interval in minutes to rotate the token if autoRotate is enabled
 			"rotationInterval" : 30,
 			// Whether the the presence of the token should be verified automatically for the verifyMethods
 			"autoVerify" : false,
+			// The name of the header to check for automatic token verification, if applicable
+			"headerName" : "x-csrf-token",
 			// The methods to verify the token presence, if enabled
 			"verifyMethods" : [ "POST", "PUT", "PATCH", "DELETE" ],
 		};
