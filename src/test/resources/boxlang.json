@@ -1,0 +1,10 @@
+{
+	"modulesDirectory": ["${user-dir}/src/main"],
+	"modules": {
+		"csrf": {
+			"settings": {
+				"rotationInterval": 1
+			}
+		}
+	}
+}

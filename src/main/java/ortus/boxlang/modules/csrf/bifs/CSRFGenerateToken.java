@@ -8,6 +8,7 @@ import ortus.boxlang.runtime.cache.providers.ICacheProvider;
 import ortus.boxlang.runtime.context.IBoxContext;
 import ortus.boxlang.runtime.context.RequestBoxContext;
 import ortus.boxlang.runtime.context.SessionBoxContext;
+import ortus.boxlang.runtime.dynamic.Attempt;
 import ortus.boxlang.runtime.dynamic.casters.LongCaster;
 import ortus.boxlang.runtime.dynamic.casters.StringCaster;
 import ortus.boxlang.runtime.dynamic.casters.StructCaster;
@@ -46,6 +47,7 @@ public class CSRFGenerateToken extends BIF {
 	 */
 	public String _invoke( IBoxContext context, ArgumentsScope arguments ) {
 
+		// We don't need to test for this because the module will fail to load if not within a web context
 		WebRequestBoxContext	requestContext	= context.getParentOfType( WebRequestBoxContext.class );
 
 		String					tokenKey		= arguments.getAsString( Key.key );
@@ -54,12 +56,15 @@ public class CSRFGenerateToken extends BIF {
 		IStruct					moduleSettings	= runtime.getModuleService().getModuleSettings( Key.of( "csrf" ) );
 		Key						storage			= Key.of( moduleSettings.getAsString( ModuleKeys.cacheStorage ) );
 		SessionBoxContext		sessionContext	= context.getParentOfType( SessionBoxContext.class );
-		Session					session			= sessionContext.getSession();
-		Key						sessionId		= session.getID();
-		IStruct					activeTokens;
+		if ( sessionContext == null ) {
+			throw new RuntimeException( "CSRF Tokens may not be generated or verified unless session management is enabled" );
+		}
+		Session			session		= sessionContext.getSession();
+		Key				sessionId	= session.getID();
+		IStruct			activeTokens;
 
-		ICacheProvider			cacheProvider;
-		String					cacheKey		= session.getCacheKey() + "_csrf_tokens";
+		ICacheProvider	cacheProvider;
+		String			cacheKey	= "bl_csrf_tokens_" + session.getCacheKey();
 
 		if ( storage.equals( ModuleKeys.session ) ) {
 			cacheProvider = context.getParentOfType( RequestBoxContext.class ).getApplicationListener().getApplication().getSessionsCache();
@@ -67,15 +72,16 @@ public class CSRFGenerateToken extends BIF {
 			cacheProvider = runtime.getCacheService().getCache( storage );
 		}
 
-		Object existing = cacheProvider.get( cacheKey );
-		if ( existing == null ) {
+		Attempt<Object> existing = cacheProvider.get( cacheKey );
+		if ( existing.isNull() ) {
 			activeTokens = new Struct();
 		} else {
-			activeTokens = StructCaster.cast( existing );
+			activeTokens = StructCaster.cast( existing.get() );
 		}
 
 		activeTokens = activeTokens.entrySet().stream().filter( entry -> {
 			DateTime expires = new DateTime( StructCaster.cast( entry.getValue() ).getAsString( Key.expires ) );
+			expires.getWrapped().isAfter( new DateTime().getWrapped() );
 			return expires.getWrapped().isAfter( new DateTime().getWrapped() );
 		} ).collect( BLCollector.toStruct() );
 
@@ -84,7 +90,7 @@ public class CSRFGenerateToken extends BIF {
 		if ( forceNew || !activeTokens.containsKey( assignment ) ) {
 			IStruct tokenStruct = Struct.of(
 			    Key.token, generateNewToken( requestContext, sessionId.toString(), tokenKey, getRealIP( requestContext ) ),
-			    Key.expires, new DateTime().modify( "m", moduleSettings.getAsLong( ModuleKeys.rotationInterval ) ).toISOString()
+			    Key.expires, new DateTime().modify( "m", LongCaster.cast( moduleSettings.get( ModuleKeys.rotationInterval ) ) ).toISOString()
 			);
 			activeTokens.put( assignment, tokenStruct );
 			cacheProvider.set( cacheKey, activeTokens );

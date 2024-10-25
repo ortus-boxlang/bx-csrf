@@ -1,5 +1,6 @@
 .gradle
 build/**
+bin/**
 grapher/**
 !gradle/wrapper/gradle-wrapper.jar
 

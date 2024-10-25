@@ -40,16 +40,21 @@ dependencies {
 	// You must run `./gradle build -x test` in the BoxLang project
 	// LOCAL DEVELOPMENT ONLY
 	// CHOOSE THE RIGHT LOCATION FOR YOUR LOCAL DEPENDENCIES
-    compileOnly files( '../boxlang/build/libs/boxlang-' + boxlangVersion + '-all.jar' )
-	compileOnly files( '../boxlang-web-support/build/distributions/boxlang-web-support-' + boxlangVersion + '.jar' )
+    // compileOnly files( '../boxlang/build/libs/boxlang-' + boxlangVersion + '-all.jar' )
+	// compileOnly files( '../boxlang-web-support/build/distributions/boxlang-web-support-' + boxlangVersion + '.jar' )
 
 	// Downloaded Dependencies
 	compileOnly files( 'src/test/resources/libs/boxlang-web-support-' + boxlangVersion + '.jar' )
 	compileOnly files( 'src/test/resources/libs/boxlang-' + boxlangVersion + '-all.jar' )
 
     // Testing Dependencies
-	testImplementation files( '../../boxlang/build/distributions/boxlang-' + boxlangVersion + '-all.jar' )
+	// testImplemenation files( '../boxlang/build/libs/boxlang-' + boxlangVersion + '-all.jar' )
+	// testImplemenation files( '../boxlang-web-support/build/distributions/boxlang-web-support-' + boxlangVersion + '.jar' )
+
+	// Downloaded Dependencies
+	testImplementation files( 'src/test/resources/libs/boxlang-web-support-' + boxlangVersion + '.jar' )
 	testImplementation files( 'src/test/resources/libs/boxlang-' + boxlangVersion + '-all.jar' )
+
     testImplementation "org.junit.jupiter:junit-jupiter:5.+"
 	testImplementation "org.mockito:mockito-core:5.+"
 	testImplementation "com.google.truth:truth:1.+"
