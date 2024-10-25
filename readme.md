@@ -1,5 +1,59 @@
 # ⚡︎ BoxLang Module: BoxLang CSRF
 
+# ⚡︎ BoxLang Module: WDDX Module
+
+The CSRF module provides the functionality to generate and verify [Cross-Site Request Forgery](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html) tokens to Boxlang Web Runtimes.  
+
+## Built-In Functions
+
+This module contributes the following native functions to the boxlang runtime:
+
+* `CSRFGenerateToken( [ string key ] )` - this function generates the CSRF token.  The optional `key` argument can be provided to create and scope a specific token.
+* `CSRFVerifyToken( required string token, [ string key ] )` - this function verifies the token created by the above method.  The `key` argument must be passed if the token was generated with the that argument.
+
+## Configuration
+
+The module may be configured using the following settings in your `boxlang.json` file.  The settings noted below are the defaults:
+
+```javascript
+"modules": {
+	"csrf": {
+		"settings": {
+			// The cache storage to use can be either a cache ( e.g. `default` ) name or the default "session" to store the keys within the user sessions cache
+			"cacheStorage" : "session",
+			// The duration in minutes to perform a cache reap of expired tokens
+			"reapFrequency" : 1,
+			// Whether tokens should be rotated automatically. If false the token will be rotated only when the token is requested.
+			"autoRotate" : true,
+			// The interval in minutes to rotate the token if autoRotate is enabled
+			"rotationInterval" : 30,
+			// Whether the the presence of the token should be verified automatically for the verifyMethods
+			"autoVerify" : false,
+			// The name of the header to check for automatic token verification, if applicable
+			"headerName" : "x-csrf-token",
+			// The methods to verify the token presence, if enabled
+			"verifyMethods" : [ "POST", "PUT", "PATCH", "DELETE" ],
+		}
+	}
+}
+```
+
+## Token Storage
+
+Tokens may be stored any named [caches configured](https://boxlang.ortusbooks.com/getting-started/configuration#caches) within the Boxlang runtime.  By default the user `session` cache is used for storage.  
+
+## Token Expiration
+
+By default, the module is configured to rotate all user csrf tokens every 30 minutes.  This setting may be changed to another duration of minutes using the `rotationInterval` module setting.  If you do NOT want the tokens to EVER expire, then use the value of 0 zero. Note that using in-memory caches will result in token expiration on runtime shutdown.
+
+## Auto-Verification
+
+The module may be enabled to perform auto-verification of CSRF inbound headers.  If enabled, a check will be performed at the beginning of the request for the presence of the configured CSRF `headerName` setting and, if verification fails, an error will be thrown.  Note that any tokens created for use in auto-verification must omit the `key` argument, as only the default token may be verified.
+
+## Cache Reaping
+
+A scheduler is enabled with the module which will perform a check and remove all expired tokens from the cache at a frequency of minutes ( default `1` ).  If you wish to adjust this, you make change the `reapFrequency` setting to your desired interval.
+
 ```
 |:------------------------------------------------------:|
 | ⚡︎ B o x L a n g ⚡︎
@@ -15,107 +69,6 @@
 </blockquote>
 
 <p>&nbsp;</p>
-
-This template can be used to create Ortus based BoxLang Modules.  To use, just click the `Use this Template` button in the github repository: https://github.com/boxlang-modules/module-template and run the setup task from where you cloned it.
-
-```bash
-box task run taskFile=src/build/SetupTemplate
-```
-
-The `SetupTemplate` task will ask you for your module name, id and description and configure the template for you! Enjoy!
-
-## Directory Structure
-
-Here is a brief overview of the directory structure:
-
-* `.github/workflows` - These are the github actions to test and build the module via CI
-* `build` - This is a temporary non-sourced folder that contains the build assets for the module that gradle produces
-* `gradle` - The gradle wrapper and configuration
-* `src` - Where your module source code lives
-* `.cfformat.json` - A CFFormat using the Ortus Standards
-* `.editorconfig` - Smooth consistency between editors
-* `.gitattributes` - Git attributes
-* `.gitignore` - Basic ignores. Modify as needed.
-* `.markdownlint.json` - A linting file for markdown docs
-* `.ortus-java-style.xml` - Ortus Java Style for IntelliJ, VScode, Eclipse.
-* `box.json` - The box.json for your module used to publish to ForgeBox
-* `build.gradle` - The gradle build file for the module
-* `changelog.md` - A nice changelog tracking file
-* `CONTRIBUTING.md` - A contribution guideline
-* `gradlew` - The gradle wrapper
-* `gradlew.bat` - The gradle wrapper for windows
-* `ModuleConfig.cfc` - Your module's configuration. Modify as needed.
-* `readme.md` - Your module's readme. Modify as needed.
-* `settings.gradle` - The gradle settings file
-
-Here is a brief overview of the source directory structure:
-
-* `build` - Build scripts and assets
-* `main` - The main module source code
-  * `bx` - The BoxLang source code
-  * `ModuleConfig.bx` - The BoxLang module configuration
-    * `bifs` - BoxLang built-in functions
-    * `components` - BoxLang components
-    * `config` - BoxLang configuration, schedulers, etc.
-    * `interceptors` - BoxLang interceptors
-    * `libs` - Java libraries to use that are NOT managed by gradle
-    * `models` - BoxLang models
-  * `java` - Java source code
-  * `resources` - Resources for the module placed in final jar
-* `test`
-  * `bx` - The BoxLang test code
-  * `java` - Java test code
-  * `resources` - Resources for testing
-    * `libs` - BoxLang binary goes here for now.
-
-## Project Properties
-
-The project name is defined in the `settings.gradle` file.  You can change it there.
-The project version, BoxLang Version and JDK version is defined in the `build.gradle` file.  You can change it there.
-
-## Gradle Tasks
-
-Before you get started, you need to run the `downloadBoxLang` task in order to download the latest BoxLang binary until we publish to Maven.
-
-```bash
-gradle downloadBoxLang
-```
-
-This will store the binary under `/src/test/resources/libs` for you to use in your tests and compiler. Here are some basic tasks
-
-
-| Task                | Description                                                                                                        	|
-|---------------------|---------------------------------------------------------------------------------------------------------------------|
-| `build`             | The default lifecycle task that triggers the build process, including tasks like `clean`, `assemble`, and others. 	|
-| `clean`             | Deletes the `build` folders. It helps ensure a clean build by removing any previously generated artifacts.			|
-| `compileJava`       | Compiles Java source code files located in the `src/main/java` directory											|
-| `compileTestJava`   | Compiles Java test source code files located in the `src/test/java` directory										|
-| `dependencyUpdates` | Checks for updated versions of all dependencies															 			|
-| `downloadBoxLang`   | Downloads the latest BoxLang binary for testing																		|
-| `jar`               | Packages your project's compiled classes and resources into a JAR file `build/libs` folder							|
-| `javadoc`           | Generates the Javadocs for your project and places them in the `build/docs/javadoc` folder							|
-| `serviceLoader`     | Generates the ServiceLoader file for your project																	|
-| `spotlessApply`     | Runs the Spotless plugin to format the code																			|
-| `spotlessCheck`     | Runs the Spotless plugin to check the formatting of the code														|
-| `tasks`			  | Show all the available tasks in the project																			|
-| `test`              | Executes the unit tests in your project and produces the reports in the `build/reports/tests` folder				|
-
-## Tests
-
-Please use the `src/test` folder for your unit tests.  You can either test using TestBox o JUnit if it's Java.
-
-## Github Actions Automation
-
-The github actions will clone, test, package, deploy your module to ForgeBox and the Ortus S3 accounts for API Docs and Artifacts.  So please make sure the following environment variables are set in your repository.
-
-> Please note that most of them are already defined at the org level
-
-* `FORGEBOX_TOKEN` - The Ortus ForgeBox API Token
-* `AWS_ACCESS_KEY` - The travis user S3 account
-* `AWS_ACCESS_SECRET` - The travis secret S3
-
-> Please contact the admins in the `#infrastructure` channel for these credentials if needed
-
 
 ## Ortus Sponsors
 
