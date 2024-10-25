@@ -1,7 +1,5 @@
 # ⚡︎ BoxLang Module: BoxLang CSRF
 
-# ⚡︎ BoxLang Module: WDDX Module
-
 The CSRF module provides the functionality to generate and verify [Cross-Site Request Forgery](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html) tokens to Boxlang Web Runtimes.  
 
 ## Built-In Functions
