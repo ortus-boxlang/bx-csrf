@@ -22,33 +22,24 @@ import ortus.boxlang.runtime.bifs.BIF;
 import ortus.boxlang.runtime.bifs.BoxBIF;
 import ortus.boxlang.runtime.context.IBoxContext;
 import ortus.boxlang.runtime.scopes.ArgumentsScope;
-import ortus.boxlang.runtime.scopes.Key;
-import ortus.boxlang.runtime.types.Argument;
 import ortus.boxlang.web.context.WebRequestBoxContext;
 
 @BoxBIF
-public class CSRFVerifyToken extends BIF {
+public class CSRFRotate extends BIF {
 
-	public CSRFVerifyToken() {
+	public CSRFRotate() {
 		super();
-		declaredArguments = new Argument[] {
-		    new Argument( true, "string", Key.token ),
-		    new Argument( false, "string", Key.key, "default" )
-		};
 	}
 
 	/**
-	 * ExampleBIF
+	 * Rotates the CSRF token(s) in the session cache to protect against Cross-Site Request Forgery (CSRF) attacks.
 	 *
 	 * @param context   The context in which the BIF is being invoked.
 	 * @param arguments Argument scope for the BIF.
 	 */
-	public Boolean _invoke( IBoxContext context, ArgumentsScope arguments ) {
-		return CSRFService.verify(
-		    context.getParentOfType( WebRequestBoxContext.class ),
-		    arguments.getAsString( Key.token ).trim(),
-		    arguments.getAsString( Key.key ).trim()
-		);
+	@Override
+	public Object _invoke( IBoxContext context, ArgumentsScope arguments ) {
+		return CSRFService.rotate( context.getParentOfType( WebRequestBoxContext.class ) );
 	}
 
 }

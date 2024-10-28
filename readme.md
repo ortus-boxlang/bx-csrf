@@ -1,13 +1,14 @@
 # ⚡︎ BoxLang Module: BoxLang CSRF
 
-The CSRF module provides the functionality to generate and verify [Cross-Site Request Forgery](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html) tokens to Boxlang Web Runtimes.  
+The CSRF module provides the functionality to generate and verify [Cross-Site Request Forgery](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html) tokens to Boxlang Web Runtimes.
 
 ## Built-In Functions
 
 This module contributes the following native functions to the boxlang runtime:
 
-* `CSRFGenerateToken( [ string key ] )` - this function generates the CSRF token.  The optional `key` argument can be provided to create and scope a specific token.
+* `CSRFGenerateToken( [ string key='default' ], [ boolean forceNew=false] )` - this function generates the CSRF token.  The optional `key` argument can be provided to create and scope a specific token.
 * `CSRFVerifyToken( required string token, [ string key ] )` - this function verifies the token created by the above method.  The `key` argument must be passed if the token was generated with the that argument.
+* `CSRFRotate()` - this function will rotate all tokens in the cache by removing them.  This will force the next request to generate a new token.
 
 ## Configuration
 
@@ -21,8 +22,6 @@ The module may be configured using the following settings in your `boxlang.json`
 			"cacheStorage" : "session",
 			// The duration in minutes to perform a cache reap of expired tokens
 			"reapFrequency" : 1,
-			// Whether tokens should be rotated automatically. If false the token will be rotated only when the token is requested.
-			"autoRotate" : true,
 			// The interval in minutes to rotate the token if autoRotate is enabled
 			"rotationInterval" : 30,
 			// Whether the the presence of the token should be verified automatically for the verifyMethods
@@ -38,7 +37,7 @@ The module may be configured using the following settings in your `boxlang.json`
 
 ## Token Storage
 
-Tokens may be stored any named [caches configured](https://boxlang.ortusbooks.com/getting-started/configuration#caches) within the Boxlang runtime.  By default the user `session` cache is used for storage.  
+Tokens may be stored any named [caches configured](https://boxlang.ortusbooks.com/getting-started/configuration#caches) within the Boxlang runtime.  By default the user `session` cache is used for storage.
 
 ## Token Expiration
 

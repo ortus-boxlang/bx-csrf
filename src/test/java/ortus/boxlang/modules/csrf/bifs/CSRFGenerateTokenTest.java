@@ -23,6 +23,34 @@ public class CSRFGenerateTokenTest extends BaseIntegrationTest {
 		assertEquals( 40, variables.getAsString( result ).length() );
 	}
 
+	@DisplayName( "It can test the BIF CSRFGenerateToken with a custom token key" )
+	@Test
+	public void testBIFCustomTokenKey() {
+		runtime.executeSource(
+		    """
+		    application name="test" sessionmanagement="true";
+		    result = CSRFGenerateToken( "myUnitTest" );
+		    """,
+		    context );
+		assertEquals( 40, variables.getAsString( result ).length() );
+	}
+
+	@DisplayName( "It can test the BIF CSRFGenerateToken with a force new token" )
+	@Test
+	public void testBIFForceNewToken() {
+		// @formatter:off
+		runtime.executeSource(
+		    """
+		       application name="test" sessionmanagement="true";
+				CSRFRotate();
+				original = CSRFGenerateToken( "myUnitTest" );
+				result = CSRFGenerateToken( "myUnitTest", true );
+				assert original != result;
+		       """,
+		    context );
+		// @formatter:on
+	}
+
 	@DisplayName( "It can test the BIF CSRFGenerateToken using an alternate cache storage" )
 	@Test
 	public void testBIFCacheSwitch() {
