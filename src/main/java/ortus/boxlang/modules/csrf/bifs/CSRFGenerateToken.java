@@ -1,6 +1,6 @@
 package ortus.boxlang.modules.csrf.bifs;
 
-import ortus.boxlang.modules.csrf.ModuleKeys;
+import ortus.boxlang.modules.csrf.util.KeyDictionary;
 import ortus.boxlang.runtime.application.Session;
 import ortus.boxlang.runtime.bifs.BIF;
 import ortus.boxlang.runtime.bifs.BoxBIF;
@@ -35,7 +35,7 @@ public class CSRFGenerateToken extends BIF {
 		super();
 		declaredArguments = new Argument[] {
 		    new Argument( false, "string", Key.key, "default" ),
-		    new Argument( false, "boolean", ModuleKeys.forceNew, false )
+		    new Argument( false, "boolean", KeyDictionary.forceNew, false )
 		};
 	}
 
@@ -51,10 +51,10 @@ public class CSRFGenerateToken extends BIF {
 		WebRequestBoxContext	requestContext	= context.getParentOfType( WebRequestBoxContext.class );
 
 		String					tokenKey		= arguments.getAsString( Key.key );
-		Boolean					forceNew		= arguments.getAsBoolean( ModuleKeys.forceNew );
+		Boolean					forceNew		= arguments.getAsBoolean( KeyDictionary.forceNew );
 
 		IStruct					moduleSettings	= runtime.getModuleService().getModuleSettings( Key.of( "csrf" ) );
-		Key						storage			= Key.of( moduleSettings.getAsString( ModuleKeys.cacheStorage ) );
+		Key						storage			= Key.of( moduleSettings.getAsString( KeyDictionary.cacheStorage ) );
 		SessionBoxContext		sessionContext	= context.getParentOfType( SessionBoxContext.class );
 		if ( sessionContext == null ) {
 			throw new RuntimeException( "CSRF Tokens may not be generated or verified unless session management is enabled" );
@@ -66,7 +66,7 @@ public class CSRFGenerateToken extends BIF {
 		ICacheProvider	cacheProvider;
 		String			cacheKey	= "bl_csrf_tokens_" + session.getCacheKey();
 
-		if ( storage.equals( ModuleKeys.session ) ) {
+		if ( storage.equals( KeyDictionary.session ) ) {
 			cacheProvider = context.getParentOfType( RequestBoxContext.class ).getApplicationListener().getApplication().getSessionsCache();
 		} else {
 			cacheProvider = runtime.getCacheService().getCache( storage );
@@ -88,14 +88,14 @@ public class CSRFGenerateToken extends BIF {
 		Key assignment = Key.of( tokenKey );
 
 		if ( forceNew || !activeTokens.containsKey( assignment ) ) {
-			Long	rotationInterval	= LongCaster.cast( moduleSettings.get( ModuleKeys.rotationInterval ) );
+			Long	rotationInterval	= LongCaster.cast( moduleSettings.get( KeyDictionary.rotationInterval ) );
 			Boolean	rotationEnabled		= rotationInterval.equals( 0l );
 			IStruct	tokenStruct			= Struct.of(
 			    Key.token, generateNewToken( requestContext, sessionId.toString(), tokenKey, getRealIP( requestContext ) ),
 			    Key.expires,
 			    new DateTime().modify(
 			        rotationEnabled ? "m" : "yyyy",
-			        rotationEnabled ? LongCaster.cast( moduleSettings.get( ModuleKeys.rotationInterval ) ) : 15
+			        rotationEnabled ? LongCaster.cast( moduleSettings.get( KeyDictionary.rotationInterval ) ) : 15
 			    ).toISOString()
 			);
 			activeTokens.put( assignment, tokenStruct );
@@ -114,13 +114,13 @@ public class CSRFGenerateToken extends BIF {
 		    Key.algorithm, rangeAlgorithm
 		);
 		Long	range		= LongCaster
-		    .cast( runtime.getFunctionService().getGlobalFunction( ModuleKeys.randRange ).invoke( context, arguments, false, ModuleKeys.randRange ) );
+		    .cast( runtime.getFunctionService().getGlobalFunction( KeyDictionary.randRange ).invoke( context, arguments, false, KeyDictionary.randRange ) );
 
 		// Ensure tokenBase is sufficiently random for this user and could never be guessed
 		String	tokenBase	= key + realIP + range.toString() + new DateTime().toEpochMillis().toString() + sessionId;
 		String	hashedToken	= StringCaster.cast(
 		    runtime.getFunctionService()
-		        .getGlobalFunction( ModuleKeys.hash )
+		        .getGlobalFunction( KeyDictionary.hash )
 		        .invoke(
 		            context,
 		            Struct.of(
@@ -128,7 +128,7 @@ public class CSRFGenerateToken extends BIF {
 		                Key.algorithm, hashAlgorithm
 		            ),
 		            false,
-		            ModuleKeys.hash
+		            KeyDictionary.hash
 		        )
 		);
 
@@ -145,7 +145,7 @@ public class CSRFGenerateToken extends BIF {
 			headers.put( key, values[ 0 ] );
 		} );
 
-		IScope cgi = requestContext.getScope( ModuleKeys.cgi );
+		IScope cgi = requestContext.getScope( KeyDictionary.cgi );
 
 		if ( headers.containsKey( clusterClientIPKey ) ) {
 			return headers.getAsString( clusterClientIPKey );

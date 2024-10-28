@@ -1,6 +1,6 @@
 package ortus.boxlang.modules.csrf.bifs;
 
-import ortus.boxlang.modules.csrf.ModuleKeys;
+import ortus.boxlang.modules.csrf.util.KeyDictionary;
 import ortus.boxlang.runtime.application.Session;
 import ortus.boxlang.runtime.bifs.BIF;
 import ortus.boxlang.runtime.bifs.BoxBIF;
@@ -37,7 +37,7 @@ public class CSRFVerifyToken extends BIF {
 	public Boolean _invoke( IBoxContext context, ArgumentsScope arguments ) {
 		String				tokenKey		= arguments.getAsString( Key.key );
 		IStruct				moduleSettings	= runtime.getModuleService().getModuleSettings( Key.of( "csrf" ) );
-		Key					storage			= Key.of( moduleSettings.getAsString( ModuleKeys.cacheStorage ) );
+		Key					storage			= Key.of( moduleSettings.getAsString( KeyDictionary.cacheStorage ) );
 		SessionBoxContext	sessionContext	= context.getParentOfType( SessionBoxContext.class );
 		if ( sessionContext == null ) {
 			throw new RuntimeException( "CSRF Tokens may not be generated or verified unless session management is enabled" );
@@ -48,7 +48,7 @@ public class CSRFVerifyToken extends BIF {
 		ICacheProvider	cacheProvider;
 		String			cacheKey	= "bl_csrf_tokens_" + session.getCacheKey();
 
-		if ( storage.equals( ModuleKeys.session ) ) {
+		if ( storage.equals( KeyDictionary.session ) ) {
 			cacheProvider = context.getParentOfType( RequestBoxContext.class ).getApplicationListener().getApplication().getSessionsCache();
 		} else {
 			cacheProvider = runtime.getCacheService().getCache( storage );

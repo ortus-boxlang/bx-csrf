@@ -14,7 +14,7 @@
  */
 package ortus.boxlang.modules.csrf.interceptors;
 
-import ortus.boxlang.modules.csrf.ModuleKeys;
+import ortus.boxlang.modules.csrf.util.KeyDictionary;
 import ortus.boxlang.runtime.BoxRuntime;
 import ortus.boxlang.runtime.context.IBoxContext;
 import ortus.boxlang.runtime.dynamic.casters.BooleanCaster;
@@ -47,7 +47,7 @@ public class CSRFVerifier extends BaseInterceptor {
 	@InterceptionPoint
 	public void onRequest( IStruct interceptData ) {
 
-		if ( !moduleSettings.getAsBoolean( ModuleKeys.autoVerify ) ) {
+		if ( !moduleSettings.getAsBoolean( KeyDictionary.autoVerify ) ) {
 			return;
 		}
 
@@ -60,15 +60,15 @@ public class CSRFVerifier extends BaseInterceptor {
 		WebRequestBoxContext	webContext		= ( WebRequestBoxContext ) context;
 
 		IStruct					requestData		= StructCaster.cast( runtime.getFunctionService()
-		    .getGlobalFunction( ModuleKeys.getHTTPRequestData )
+		    .getGlobalFunction( KeyDictionary.getHTTPRequestData )
 		    .invoke(
 		        context,
 		        Struct.of(),
 		        false,
-		        ModuleKeys.getHTTPRequestData
+		        KeyDictionary.getHTTPRequestData
 		    ) );
-		Key						checkHeader		= Key.of( moduleSettings.getAsString( ModuleKeys.headerName ) );
-		Array					checkMethods	= moduleSettings.getAsArray( ModuleKeys.verifyMethods )
+		Key						checkHeader		= Key.of( moduleSettings.getAsString( KeyDictionary.headerName ) );
+		Array					checkMethods	= moduleSettings.getAsArray( KeyDictionary.verifyMethods )
 		    .stream()
 		    .map( StringCaster::cast )
 		    .map( String::toUpperCase )
@@ -77,14 +77,14 @@ public class CSRFVerifier extends BaseInterceptor {
 
 		if ( checkMethods.contains( requestData.getAsString( Key.method ).toUpperCase() ) && requestHeaders.containsKey( checkHeader ) ) {
 			boolean verified = BooleanCaster.cast( runtime.getFunctionService()
-			    .getGlobalFunction( ModuleKeys.CSRFVerifyToken )
+			    .getGlobalFunction( KeyDictionary.CSRFVerifyToken )
 			    .invoke(
 			        webContext,
 			        Struct.of(
 			            Key.token, requestHeaders.getAsString( checkHeader )
 			        ),
 			        false,
-			        ModuleKeys.CSRFVerifyToken
+			        KeyDictionary.CSRFVerifyToken
 			    ) );
 			if ( !verified ) {
 				throw new BoxRuntimeException( "The inbound CSRF Token in the header [" + checkHeader.getName() + "] is not valid" );

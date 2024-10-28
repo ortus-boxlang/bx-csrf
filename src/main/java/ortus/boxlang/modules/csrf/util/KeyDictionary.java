@@ -1,8 +1,8 @@
-package ortus.boxlang.modules.csrf;
+package ortus.boxlang.modules.csrf.util;
 
 import ortus.boxlang.runtime.scopes.Key;
 
-public class ModuleKeys {
+public class KeyDictionary {
 
 	public static final Key	_MODULE_NAME		= Key.of( "mail" );
 	public static final Key	autoRotate			= Key.of( "autoRotate" );

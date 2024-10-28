@@ -1,5 +1,4 @@
 {
-	"modulesDirectory": ["${user-dir}/src/main"],
 	"modules": {
 		"csrf": {
 			"settings": {

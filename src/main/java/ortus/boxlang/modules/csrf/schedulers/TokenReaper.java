@@ -2,7 +2,7 @@ package ortus.boxlang.modules.csrf.schedulers;
 
 import java.util.concurrent.TimeUnit;
 
-import ortus.boxlang.modules.csrf.ModuleKeys;
+import ortus.boxlang.modules.csrf.util.KeyDictionary;
 import ortus.boxlang.runtime.BoxRuntime;
 import ortus.boxlang.runtime.async.tasks.BaseScheduler;
 import ortus.boxlang.runtime.cache.filters.WildcardFilter;
@@ -32,7 +32,7 @@ public class TokenReaper extends BaseScheduler {
 	public void configure() {
 		task( "Reap Expired Tokens" )
 		    .call( () -> {
-			    Key			storage			= Key.of( moduleSettings.getAsString( ModuleKeys.cacheStorage ) );
+			    Key			storage			= Key.of( moduleSettings.getAsString( KeyDictionary.cacheStorage ) );
 			    String		cacheKeyFilter	= "bl_csrf_tokens_*";
 
 			    ICacheProvider cacheProvider = runtime.getCacheService().getCache( storage );
@@ -54,7 +54,7 @@ public class TokenReaper extends BaseScheduler {
 				        }
 			        } );
 		    } )
-		    .every( LongCaster.cast( moduleSettings.getAsNumber( ModuleKeys.reapFrequency ) ), TimeUnit.MINUTES )
+		    .every( LongCaster.cast( moduleSettings.getAsNumber( KeyDictionary.reapFrequency ) ), TimeUnit.MINUTES )
 		    .onFailure(
 		        ( task, exception ) -> logger.error(
 		            "An error occurred while attempt to perform cleanup on expired CSRF tokens. " + exception.getMessage(),
