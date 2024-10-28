@@ -1,26 +1,42 @@
+/**
+ * [BoxLang]
+ *
+ * Copyright [2023] [Ortus Solutions, Corp]
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package ortus.boxlang.modules.csrf.schedulers;
 
 import java.util.concurrent.TimeUnit;
 
+import ortus.boxlang.modules.csrf.CSRFService;
 import ortus.boxlang.modules.csrf.util.KeyDictionary;
 import ortus.boxlang.runtime.BoxRuntime;
 import ortus.boxlang.runtime.async.tasks.BaseScheduler;
-import ortus.boxlang.runtime.cache.filters.WildcardFilter;
-import ortus.boxlang.runtime.cache.providers.ICacheProvider;
-import ortus.boxlang.runtime.dynamic.Attempt;
 import ortus.boxlang.runtime.dynamic.casters.LongCaster;
-import ortus.boxlang.runtime.dynamic.casters.StringCaster;
-import ortus.boxlang.runtime.dynamic.casters.StructCaster;
-import ortus.boxlang.runtime.scopes.Key;
-import ortus.boxlang.runtime.types.DateTime;
 import ortus.boxlang.runtime.types.IStruct;
-import ortus.boxlang.runtime.types.util.BLCollector;
 
+/**
+ * TokenReaper - This scheduler is responsible for reaping expired CSRF tokens from the cache
+ */
 public class TokenReaper extends BaseScheduler {
 
 	private static BoxRuntime	runtime			= BoxRuntime.getInstance();
-	IStruct						moduleSettings	= runtime.getModuleService().getModuleSettings( Key.of( "csrf" ) );
+	IStruct						moduleSettings	= runtime.getModuleService().getModuleSettings( KeyDictionary._MODULE_NAME );
 
+	/**
+	 * No argument constructor
+	 */
 	public TokenReaper() {
 		super( "CSRFTokenReaper" );
 	}
@@ -31,29 +47,7 @@ public class TokenReaper extends BaseScheduler {
 	@Override
 	public void configure() {
 		task( "Reap Expired Tokens" )
-		    .call( () -> {
-			    Key			storage			= Key.of( moduleSettings.getAsString( KeyDictionary.cacheStorage ) );
-			    String		cacheKeyFilter	= "bl_csrf_tokens_*";
-
-			    ICacheProvider cacheProvider = runtime.getCacheService().getCache( storage );
-			    cacheProvider.getKeys( new WildcardFilter( cacheKeyFilter ) )
-			        .stream()
-			        .map( StringCaster::cast )
-			        .forEach( key -> {
-				        Attempt<Object> entry = cacheProvider.get( key );
-				        if ( !entry.isNull() ) {
-					        IStruct activeTokens = StructCaster.cast( entry.get() );
-					        cacheProvider.set(
-					            key,
-					            activeTokens.entrySet().stream().filter( item -> {
-						            DateTime expires = new DateTime( StructCaster.cast( item.getValue() ).getAsString( Key.expires ) );
-						            expires.getWrapped().isAfter( new DateTime().getWrapped() );
-						            return expires.getWrapped().isAfter( new DateTime().getWrapped() );
-					            } ).collect( BLCollector.toStruct() )
-					        );
-				        }
-			        } );
-		    } )
+		    .call( () -> CSRFService.reap() )
 		    .every( LongCaster.cast( moduleSettings.getAsNumber( KeyDictionary.reapFrequency ) ), TimeUnit.MINUTES )
 		    .onFailure(
 		        ( task, exception ) -> logger.error(
@@ -62,7 +56,7 @@ public class TokenReaper extends BaseScheduler {
 		        )
 		    )
 		    .onSuccess(
-		        ( task, result ) -> logger.debug( "Task [Reap Expired Tokens]: " + result )
+		        ( task, result ) -> logger.debug( "Task [Reaped Expired Tokens]" )
 		    );
 
 	}

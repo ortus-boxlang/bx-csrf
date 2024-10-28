@@ -3,8 +3,9 @@ package ortus.boxlang.modules.csrf;
 import ortus.boxlang.modules.csrf.util.KeyDictionary;
 import ortus.boxlang.runtime.BoxRuntime;
 import ortus.boxlang.runtime.application.Session;
+import ortus.boxlang.runtime.cache.filters.WildcardFilter;
 import ortus.boxlang.runtime.cache.providers.ICacheProvider;
-import ortus.boxlang.runtime.context.RequestBoxContext;
+import ortus.boxlang.runtime.context.IBoxContext;
 import ortus.boxlang.runtime.context.SessionBoxContext;
 import ortus.boxlang.runtime.dynamic.casters.LongCaster;
 import ortus.boxlang.runtime.dynamic.casters.StringCaster;
@@ -68,7 +69,7 @@ public class CSRFService {
 		Key					sessionId		= session.getID();
 
 		// Get the cache provider to use for storing CSRF tokens
-		ICacheProvider		cacheProvider	= getCacheProvider( context );
+		ICacheProvider		cacheProvider	= getCacheProvider();
 		String				cacheKey		= CACHE_PREFIX + session.getCacheKey();
 		Key					assignment		= Key.of( tokenKey );
 
@@ -120,7 +121,7 @@ public class CSRFService {
 		Key					assignment		= Key.of( key.isEmpty() ? DEFAULT_TOKEN_KEY : key );
 
 		// Get the cache provider to use for storing CSRF tokens + tokens
-		ICacheProvider		cacheProvider	= getCacheProvider( context );
+		ICacheProvider		cacheProvider	= getCacheProvider();
 		String				cacheKey		= CACHE_PREFIX + session.getCacheKey();
 		IStruct				activeTokens	= StructCaster.cast( cacheProvider.getOrSet( cacheKey, Struct::new ) );
 
@@ -151,7 +152,39 @@ public class CSRFService {
 		SessionBoxContext	sessionContext	= validateSessionContext( context );
 		Session				session			= sessionContext.getSession();
 
-		return getCacheProvider( context ).clear( CACHE_PREFIX + session.getCacheKey() );
+		return getCacheProvider().clear( CACHE_PREFIX + session.getCacheKey() );
+	}
+
+	/**
+	 * Reaps expired tokens from the cache.
+	 * It will find all the activeTokens storage per session and remove any expired tokens
+	 * from those storages.
+	 * <p>
+	 * This reap usually runs from a scheduler.
+	 */
+	public static void reap() {
+		IBoxContext	reapContext	= runtime.getRuntimeContext();
+		DateTime	now			= ( DateTime ) functionService
+		    .getGlobalFunction( KeyDictionary.now )
+		    .invoke( reapContext, false );
+
+		getCacheProvider()
+		    .get( new WildcardFilter( CACHE_PREFIX ) )
+		    .entrySet()
+		    .stream()
+		    .forEach( entry -> {
+			    Key	storageKey		= entry.getKey();
+			    IStruct activeTokens = StructCaster.cast( entry.getValue() );
+
+			    getCacheProvider()
+			        .set(
+			            storageKey.getName(),
+			            activeTokens.entrySet().stream().filter( item -> {
+				            DateTime expires = new DateTime( StructCaster.cast( item.getValue() ).getAsString( Key.expires ) );
+				            return expires.getWrapped().isAfter( now.getWrapped() );
+			            } ).collect( BLCollector.toStruct() )
+			        );
+		    } );
 	}
 
 	/**
@@ -161,19 +194,12 @@ public class CSRFService {
 	 */
 
 	/**
-	 * Get the cache provider to use for storing CSRF tokens according to the module settings.
-	 * If it's set to "session", the session cache will be used, else the named cache will be used.
-	 *
-	 * @param context The context in which the BIF is being invoked.
+	 * The cache provider to use for storing CSRF tokens.
 	 *
 	 * @return The cache provider to use for storing CSRF tokens.
 	 */
-	private static ICacheProvider getCacheProvider( WebRequestBoxContext context ) {
-		if ( cacheStorage.equals( KeyDictionary.session ) ) {
-			return context.getParentOfType( RequestBoxContext.class ).getApplicationListener().getApplication().getSessionsCache();
-		} else {
-			return cacheService.getCache( cacheStorage );
-		}
+	private static ICacheProvider getCacheProvider() {
+		return cacheService.getCache( cacheStorage );
 	}
 
 	/**

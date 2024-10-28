@@ -72,8 +72,8 @@ class {
 		 * Every module has a settings configuration object
 		 */
 		settings = {
-			// The cache storage to use can be either a cache ( e.g. `default, bxSessions, myTokens` ) name or the default "session" to store the keys within the user sessions cache
-			"cacheStorage" : "session",
+			// The cache storage to use for the csrf tokens, by default we use the `bxSessions` where user sessions are stored.
+			"cacheStorage" : "bxSessions",
 			// The duration in minutes to perform a cache reap of expired tokens
 			"reapFrequency" : 1,
 			// By default, all csrf tokens have a life-span of 30 minutes. After 30 minutes, they expire and we auto-generate new ones.
