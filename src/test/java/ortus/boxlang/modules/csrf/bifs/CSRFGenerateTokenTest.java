@@ -1,5 +1,6 @@
 package ortus.boxlang.modules.csrf.bifs;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.DisplayName;
@@ -7,6 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import ortus.boxlang.modules.csrf.BaseIntegrationTest;
 import ortus.boxlang.modules.csrf.util.KeyDictionary;
+import ortus.boxlang.runtime.scopes.Key;
 import ortus.boxlang.runtime.types.IStruct;
 
 public class CSRFGenerateTokenTest extends BaseIntegrationTest {
@@ -44,11 +46,15 @@ public class CSRFGenerateTokenTest extends BaseIntegrationTest {
 		       application name="test" sessionmanagement="true";
 				CSRFRotate();
 				original = CSRFGenerateToken( "myUnitTest" );
-				result = CSRFGenerateToken( "myUnitTest", true );
-				assert original != result;
+				forced = CSRFGenerateToken( "myUnitTest", true );
+				println( original )
+				println( forced )
 		       """,
 		    context );
 		// @formatter:on
+		String	original	= variables.getAsString( Key.of( "original" ) );
+		String	forced		= variables.getAsString( result );
+		assertThat( original ).isNotEqualTo( forced );
 	}
 
 	@DisplayName( "It can test the BIF CSRFGenerateToken using an alternate cache storage" )
