@@ -40,10 +40,11 @@ import ortus.boxlang.web.context.WebRequestBoxContext;
 import ortus.boxlang.web.exchange.BoxCookie;
 import ortus.boxlang.web.exchange.IBoxHTTPExchange;
 
-public class BaseIntegrationTest {
+public abstract class BaseIntegrationTest {
 
 	protected static BoxRuntime		runtime;
 	protected static ModuleService	moduleService;
+	protected static ModuleRecord	moduleRecord;
 	protected static Key			result			= new Key( "result" );
 	protected static Key			moduleName		= new Key( "csrf" );
 	protected static final String	TEST_WEBROOT	= Path.of( "src/test/resources/webroot" ).toAbsolutePath().toString();
@@ -85,8 +86,8 @@ public class BaseIntegrationTest {
 	}
 
 	protected void loadModule() {
-		String			physicalPath	= Paths.get( "./build/module" ).toAbsolutePath().toString();
-		ModuleRecord	moduleRecord	= new ModuleRecord( physicalPath );
+		String physicalPath = Paths.get( "./build/module" ).toAbsolutePath().toString();
+		moduleRecord = new ModuleRecord( physicalPath );
 
 		moduleService.getRegistry().put( moduleName, moduleRecord );
 

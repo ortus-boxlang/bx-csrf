@@ -12,9 +12,6 @@ public class IntegrationTest extends BaseIntegrationTest {
 	@DisplayName( "Test the module loads in BoxLang" )
 	@Test
 	public void testModuleLoads() {
-		// Given
-		loadModule();
-
 		// Verify things got registered
 		assertThat( moduleService.getRegistry().containsKey( moduleName ) ).isTrue();
 		assertThat( runtime.getSchedulerService().hasScheduler( Key.of( "CSRFTokenReaper@csrf" ) ) ).isTrue();

@@ -160,7 +160,8 @@ public class CSRFService {
 	 * It will find all the activeTokens storage per session and remove any expired tokens
 	 * from those storages.
 	 * <p>
-	 * This reap usually runs from a scheduler.
+	 * This reap usually runs from a scheduler so there is no running context
+	 * so we use the runtime context for execution.
 	 */
 	public static void reap() {
 		IBoxContext	reapContext	= runtime.getRuntimeContext();

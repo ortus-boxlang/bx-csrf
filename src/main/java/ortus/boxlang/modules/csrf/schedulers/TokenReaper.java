@@ -47,7 +47,7 @@ public class TokenReaper extends BaseScheduler {
 	@Override
 	public void configure() {
 		task( "Reap Expired Tokens" )
-		    .call( () -> CSRFService.reap() )
+		    .call( CSRFService::reap )
 		    .every( LongCaster.cast( moduleSettings.getAsNumber( KeyDictionary.reapFrequency ) ), TimeUnit.MINUTES )
 		    .onFailure(
 		        ( task, exception ) -> logger.error(

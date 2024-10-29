@@ -6,9 +6,10 @@ The CSRF module provides the functionality to generate and verify [Cross-Site Re
 
 This module contributes the following native functions to the boxlang runtime:
 
-* `CSRFGenerateToken( [ string key='default' ], [ boolean forceNew=false] )` - this function generates the CSRF token.  The optional `key` argument can be provided to create and scope a specific token.
+* `CSRFGenerateToken( [string key='default'], [boolean forceNew=false] )` - this function generates the CSRF token.  The optional `key` argument can be provided to create and scope a specific token.
 * `CSRFVerifyToken( required string token, [ string key ] )` - this function verifies the token created by the above method.  The `key` argument must be passed if the token was generated with the that argument.
 * `CSRFRotate()` - this function will rotate all tokens in the cache by removing them.  This will force the next request to generate a new token.
+* `CSRFHiddenField( [string key='default'], [boolean forceNew=false] )` - Generates a hidden field with a csrf in it as the value.  The name of the field is `csrf`
 
 ## Configuration
 

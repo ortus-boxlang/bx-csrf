@@ -36,8 +36,8 @@ import ortus.boxlang.web.context.WebRequestBoxContext;
 public class CSRFVerifier extends BaseInterceptor {
 
 	BoxRuntime	runtime			= BoxRuntime.getInstance( true );
-
-	IStruct		moduleSettings	= runtime.getModuleService().getModuleSettings( Key.of( "csrf" ) );
+	IStruct		moduleSettings	= runtime.getModuleService().getModuleSettings( KeyDictionary._MODULE_NAME );
+	Boolean		enabled			= BooleanCaster.cast( moduleSettings.getAsBoolean( KeyDictionary.autoVerify ) );
 
 	/**
 	 * On Request Interception Contribution
@@ -47,7 +47,7 @@ public class CSRFVerifier extends BaseInterceptor {
 	@InterceptionPoint
 	public void onRequest( IStruct interceptData ) {
 
-		if ( !moduleSettings.getAsBoolean( KeyDictionary.autoVerify ) ) {
+		if ( !enabled ) {
 			return;
 		}
 
