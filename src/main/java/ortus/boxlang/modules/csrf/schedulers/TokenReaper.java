@@ -50,13 +50,13 @@ public class TokenReaper extends BaseScheduler {
 		    .call( CSRFService::reap )
 		    .every( LongCaster.cast( moduleSettings.getAsNumber( KeyDictionary.reapFrequency ) ), TimeUnit.MINUTES )
 		    .onFailure(
-		        ( task, exception ) -> logger.error(
+		        ( task, exception ) -> this.logger.error(
 		            "An error occurred while attempt to perform cleanup on expired CSRF tokens. " + exception.getMessage(),
 		            exception
 		        )
 		    )
 		    .onSuccess(
-		        ( task, result ) -> logger.debug( "Task [Reaped Expired Tokens]" )
+		        ( task, result ) -> this.logger.debug( "Task [Reaped Expired Tokens]" )
 		    );
 
 	}
@@ -66,7 +66,7 @@ public class TokenReaper extends BaseScheduler {
 	 */
 	@Override
 	public void onShutdown() {
-		logger.debug( "[onShutdown] ==> The CSRF TokenReaper has been shutdown" );
+		this.logger.debug( "[onShutdown] ==> The CSRF TokenReaper has been shutdown" );
 	}
 
 	/**
@@ -74,7 +74,7 @@ public class TokenReaper extends BaseScheduler {
 	 */
 	@Override
 	public void onStartup() {
-		logger.debug( "[onStartup] ==> The CSRF TokenReaper has been started" );
+		this.logger.debug( "[onStartup] ==> The CSRF TokenReaper has been started" );
 	}
 
 }
