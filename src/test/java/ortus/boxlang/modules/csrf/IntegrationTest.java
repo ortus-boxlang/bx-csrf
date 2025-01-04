@@ -18,13 +18,5 @@ public class IntegrationTest extends BaseIntegrationTest {
 		assertThat( runtime.getFunctionService().hasGlobalFunction( "CSRFGenerateToken" ) ).isTrue();
 		assertThat( runtime.getFunctionService().hasGlobalFunction( "CSRFVerifyToken" ) ).isTrue();
 
-		// @formatter:off
-		// runtime.executeSource(
-		//     """
-		// 	// Testing code here
-		// 	""",
-		//     context
-		// );
-		// @formatter:on
 	}
 }
