@@ -15,7 +15,7 @@ public class CSRFVerifyTokenTest extends BaseIntegrationTest {
 		// @formatter:off
 		runtime.executeSource(
 		    """
-				application name="test" sessionmanagement="true";
+				bx:application name="test" sessionmanagement="true";
 				token = CSRFGenerateToken();
 				result = CSRFVerifyToken(token);
 		    """,
@@ -25,7 +25,7 @@ public class CSRFVerifyTokenTest extends BaseIntegrationTest {
 		// test with key name
 		runtime.executeSource(
 		    """
-		       application name="test" sessionmanagement="true";
+		       bx:application name="test" sessionmanagement="true";
 		       token = CSRFGenerateToken( "test" );
 		    result = CSRFVerifyToken(token, "test" );
 		       """,

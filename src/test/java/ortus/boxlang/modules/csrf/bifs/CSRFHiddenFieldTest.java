@@ -14,7 +14,7 @@ public class CSRFHiddenFieldTest extends BaseIntegrationTest {
 	public void testExampleBIF() {
 		runtime.executeSource(
 		    """
-		       application name="test" sessionmanagement="true";
+		       bx:application name="test" sessionmanagement="true";
 		       result = CSRFHiddenField();
 		    println( result )
 		       """,
