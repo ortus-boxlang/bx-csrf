@@ -132,6 +132,7 @@ jar {
     }
 }
 shadowJar {
+	archiveClassifier = ""
     mergeServiceFiles()
     destinationDirectory = file( "build/libs" )
 }
