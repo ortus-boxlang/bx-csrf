@@ -30,6 +30,7 @@ import org.mockito.Mockito;
 
 import ortus.boxlang.runtime.BoxRuntime;
 import ortus.boxlang.runtime.application.BaseApplicationListener;
+import ortus.boxlang.runtime.context.IBoxContext;
 import ortus.boxlang.runtime.modules.ModuleRecord;
 import ortus.boxlang.runtime.scopes.IScope;
 import ortus.boxlang.runtime.scopes.Key;
@@ -57,6 +58,25 @@ public abstract class BaseIntegrationTest {
 	public static void setup() {
 		runtime			= BoxRuntime.getInstance( true, Path.of( "src/test/resources/boxlang.json" ).toString() );
 		moduleService	= runtime.getModuleService();
+		// Load the module
+		loadModule( runtime.getRuntimeContext() );
+	}
+
+	protected static void loadModule( IBoxContext context ) {
+		if ( !runtime.getModuleService().hasModule( moduleName ) ) {
+			System.out.println( "Loading module: " + moduleName );
+			String physicalPath = Paths.get( "./build/module" ).toAbsolutePath().toString();
+			moduleRecord = new ModuleRecord( physicalPath );
+
+			moduleService.getRegistry().put( moduleName, moduleRecord );
+
+			moduleRecord
+			    .loadDescriptor( context )
+			    .register( context )
+			    .activate( context );
+		} else {
+			System.out.println( "Module already loaded: " + moduleName );
+		}
 	}
 
 	@BeforeEach
@@ -72,9 +92,6 @@ public abstract class BaseIntegrationTest {
 		context		= new WebRequestBoxContext( runtime.getRuntimeContext(), mockExchange, TEST_WEBROOT );
 		variables	= context.getScopeNearby( VariablesScope.name );
 
-		// Load the module
-		loadModule();
-
 		try {
 			context.loadApplicationDescriptor( new URI( requestURI ) );
 		} catch ( URISyntaxException e ) {
@@ -83,18 +100,6 @@ public abstract class BaseIntegrationTest {
 
 		BaseApplicationListener appListener = context.getApplicationListener();
 		appListener.onRequestStart( context, new Object[] { requestURI } );
-	}
-
-	protected void loadModule() {
-		String physicalPath = Paths.get( "./build/module" ).toAbsolutePath().toString();
-		moduleRecord = new ModuleRecord( physicalPath );
-
-		moduleService.getRegistry().put( moduleName, moduleRecord );
-
-		moduleRecord
-		    .loadDescriptor( context )
-		    .register( context )
-		    .activate( context );
 	}
 
 }

@@ -18,7 +18,7 @@ public class CSRFGenerateTokenTest extends BaseIntegrationTest {
 	public void testExampleBIF() {
 		runtime.executeSource(
 		    """
-		    application name="test" sessionmanagement="true";
+		    bx:application name="test" sessionmanagement="true";
 		    result = CSRFGenerateToken();
 		    """,
 		    context );
@@ -30,7 +30,7 @@ public class CSRFGenerateTokenTest extends BaseIntegrationTest {
 	public void testBIFCustomTokenKey() {
 		runtime.executeSource(
 		    """
-		    application name="test" sessionmanagement="true";
+		    bx:application name="test" sessionmanagement="true";
 		    result = CSRFGenerateToken( "myUnitTest" );
 		    """,
 		    context );
@@ -43,7 +43,7 @@ public class CSRFGenerateTokenTest extends BaseIntegrationTest {
 		// @formatter:off
 		runtime.executeSource(
 		    """
-		       application name="test" sessionmanagement="true";
+		       bx:application name="test" sessionmanagement="true";
 				CSRFRotate();
 				original = CSRFGenerateToken( "myUnitTest" );
 				forced = CSRFGenerateToken( "myUnitTest", true );
@@ -64,7 +64,7 @@ public class CSRFGenerateTokenTest extends BaseIntegrationTest {
 		moduleSettings.put( KeyDictionary.cacheStorage, "default" );
 		runtime.executeSource(
 		    """
-		    application name="test" sessionmanagement="true";
+		    bx:application name="test" sessionmanagement="true";
 		    result = CSRFGenerateToken();
 		    """,
 		    context );
