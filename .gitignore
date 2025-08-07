@@ -2,6 +2,7 @@
 build/**
 bin/**
 grapher/**
+docs/**
 !gradle/wrapper/gradle-wrapper.jar
 
 ### IntelliJ IDEA ###
