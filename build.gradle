@@ -55,7 +55,7 @@ dependencies {
 	testImplementation files( 'src/test/resources/libs/boxlang-web-support-' + boxlangVersion + '.jar' )
 	testImplementation files( 'src/test/resources/libs/boxlang-' + boxlangVersion + '.jar' )
 
-    testImplementation "org.junit.jupiter:junit-jupiter:5.+"
+    testImplementation "org.junit.jupiter:junit-jupiter:6.+"
 	testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 	testImplementation "org.mockito:mockito-core:5.+"
 	testImplementation "com.google.truth:truth:1.+"
