@@ -135,6 +135,14 @@ public class CSRFService {
 		return false;
 	}
 
+	/**
+	 * Generate the cache key for storing the token.
+	 *
+	 * @param sessionCacheKey The session cache key.
+	 * @param tokenKey        The token key.
+	 *
+	 * @return The generated cache key.
+	 */
 	public static String generateTokenCacheKey( String sessionCacheKey, String tokenKey ) {
 		final String separator = "_";
 		return CACHE_PREFIX + sessionCacheKey + separator + tokenKey;
