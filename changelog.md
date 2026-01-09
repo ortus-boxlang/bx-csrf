@@ -9,13 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+* BLMODULES-121 - Update to default to use current application session cache and change storage to single entry per token
+
 ## [1.2.0] - 2025-04-07
 
 ## [1.1.0] - 2025-01-03
 
 ## [1.0.0] - 2024-11-01
 
-- First iteration of this module
+* First iteration of this module
 
 [Unreleased]: https://github.com/ortus-boxlang/bx-csrf/compare/v1.2.0...HEAD
 

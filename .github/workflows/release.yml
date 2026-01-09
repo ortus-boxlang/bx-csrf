@@ -42,7 +42,7 @@ jobs:
       issues: write
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup CommandBox
         uses: Ortus-Solutions/setup-commandbox@v2.0.1
@@ -50,7 +50,7 @@ jobs:
           forgeboxAPIKey: ${{ secrets.FORGEBOX_API_TOKEN }}
 
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: "temurin"
           java-version: ${{ env.JDK }}
@@ -84,7 +84,7 @@ jobs:
           fi
 
       - name: Update changelog [unreleased] with latest version
-        uses: thomaseizinger/keep-a-changelog-new-release@2.0.0
+        uses: thomaseizinger/keep-a-changelog-new-release@3.1.0
         if: env.SNAPSHOT == 'false'
         with:
           changelogPath: ./changelog.md
@@ -116,7 +116,7 @@ jobs:
 
       - name: Upload Build Artifacts
         if: success()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: boxlang-build
           path: |
@@ -152,7 +152,7 @@ jobs:
           cd $GITHUB_WORKSPACE
 
       - name: Create Github Release
-        uses: taiki-e/create-gh-release-action@v1.8.0
+        uses: taiki-e/create-gh-release-action@v1.9.1
         continue-on-error: true
         if: env.SNAPSHOT == 'false'
         id: create_release
@@ -189,7 +189,7 @@ jobs:
       issues: write
     steps:
       - name: Checkout Development Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: development
 
@@ -199,7 +199,7 @@ jobs:
           gradle-version: ${{ env.GRADLE }}
 
       - name: Download build artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: boxlang-build
           path: .tmp

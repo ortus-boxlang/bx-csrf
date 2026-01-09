@@ -1,11 +1,14 @@
 package ortus.boxlang.modules.csrf;
 
+import java.time.Duration;
+
 import ortus.boxlang.modules.csrf.util.KeyDictionary;
 import ortus.boxlang.runtime.BoxRuntime;
 import ortus.boxlang.runtime.application.Session;
 import ortus.boxlang.runtime.cache.filters.WildcardFilter;
 import ortus.boxlang.runtime.cache.providers.ICacheProvider;
-import ortus.boxlang.runtime.context.IBoxContext;
+import ortus.boxlang.runtime.context.ApplicationBoxContext;
+import ortus.boxlang.runtime.context.RequestBoxContext;
 import ortus.boxlang.runtime.context.SessionBoxContext;
 import ortus.boxlang.runtime.dynamic.casters.LongCaster;
 import ortus.boxlang.runtime.dynamic.casters.StringCaster;
@@ -18,7 +21,6 @@ import ortus.boxlang.runtime.types.DateTime;
 import ortus.boxlang.runtime.types.IStruct;
 import ortus.boxlang.runtime.types.Struct;
 import ortus.boxlang.runtime.types.exceptions.BoxRuntimeException;
-import ortus.boxlang.runtime.types.util.BLCollector;
 import ortus.boxlang.web.context.WebRequestBoxContext;
 import ortus.boxlang.web.exchange.IBoxHTTPExchange;
 
@@ -70,8 +72,7 @@ public class CSRFService {
 
 		// Get the cache provider to use for storing CSRF tokens
 		ICacheProvider		cacheProvider	= getCacheProvider();
-		String				cacheKey		= CACHE_PREFIX + session.getCacheKey();
-		Key					assignment		= Key.of( tokenKey );
+		String				cacheKey		= generateTokenCacheKey( session.getCacheKey(), tokenKey );
 
 		// IMPORTANT: Get now according to timezone info of application
 		DateTime			now				= ( DateTime ) functionService
@@ -79,28 +80,25 @@ public class CSRFService {
 		    .invoke( context, false );
 
 		// Get the token storage from the cache with the active tokens only
-		IStruct				activeTokens	= StructCaster.cast( cacheProvider.getOrSet( cacheKey, Struct::new ) )
-		    .entrySet()
-		    .stream()
-			// @formatter:off
-		    .filter( entry -> {
-				DateTime expires = new DateTime( StructCaster.cast( entry.getValue() ).getAsString( Key.expires ) );
-				return expires.getWrapped().isAfter( now.getWrapped() );
-			} )
-			// @formatter:on
-		    .collect( BLCollector.toStruct() );
+		IStruct				activeToken		= StructCaster.cast( cacheProvider.getOrSet( cacheKey, Struct::new ) );
 
 		// If the token doesn't exist or we're forcing a new one, generate a new token
-		if ( forceNew || !activeTokens.containsKey( assignment ) ) {
-			activeTokens.put( assignment, Struct.of(
+		if ( forceNew || activeToken.isEmpty() ) {
+			activeToken = Struct.of(
 			    Key.token, generateNewToken( context, sessionId.toString(), tokenKey ),
 			    KeyDictionary.created, now.toISOString(),
 			    Key.expires, now.modify( "n", rotationInterval ).toISOString()
-			) );
-			cacheProvider.set( cacheKey, activeTokens );
+			);
+			cacheProvider.set(
+			    cacheKey,
+			    activeToken,
+			    Duration.ofMinutes( rotationInterval ),
+			    Duration.ofMinutes( rotationInterval )
+
+			);
 		}
 
-		return activeTokens.getAsStruct( assignment ).getAsString( Key.token );
+		return activeToken.getAsString( Key.token );
 	}
 
 	/**
@@ -117,28 +115,37 @@ public class CSRFService {
 		SessionBoxContext	sessionContext	= validateSessionContext( context );
 		Session				session			= sessionContext.getSession();
 
-		// Which key to store the token under in the cache
-		Key					assignment		= Key.of( key.isEmpty() ? DEFAULT_TOKEN_KEY : key );
-
 		// Get the cache provider to use for storing CSRF tokens + tokens
 		ICacheProvider		cacheProvider	= getCacheProvider();
-		String				cacheKey		= CACHE_PREFIX + session.getCacheKey();
-		IStruct				activeTokens	= StructCaster.cast( cacheProvider.getOrSet( cacheKey, Struct::new ) );
+		String				cacheKey		= generateTokenCacheKey( session.getCacheKey(), key.isEmpty() ? DEFAULT_TOKEN_KEY : key );
+		IStruct				activeToken		= StructCaster.cast( cacheProvider.getOrSet( cacheKey, Struct::new ) );
 
 		// Token key doesn't exist in the cache
-		if ( !activeTokens.containsKey( assignment ) ) {
+		if ( activeToken.isEmpty() ) {
 			return false;
 		}
 
 		// Token assignment key exists, check if the token matches and if it has not expired
-		IStruct tokenData = activeTokens.getAsStruct( assignment );
-		if ( tokenData.getAsString( Key.token ).equals( token ) ) {
-			DateTime	expires	= new DateTime( tokenData.getAsString( Key.expires ) );
+		if ( activeToken.getAsString( Key.token ).equals( token ) ) {
+			DateTime	expires	= new DateTime( activeToken.getAsString( Key.expires ) );
 			DateTime	now		= ( DateTime ) functionService.getGlobalFunction( KeyDictionary.now ).invoke( context, false );
 			return expires.getWrapped().isAfter( now.getWrapped() );
 		}
 
 		return false;
+	}
+
+	/**
+	 * Generate the cache key for storing the token.
+	 *
+	 * @param sessionCacheKey The session cache key.
+	 * @param tokenKey        The token key.
+	 *
+	 * @return The generated cache key.
+	 */
+	public static String generateTokenCacheKey( String sessionCacheKey, String tokenKey ) {
+		final String separator = "_";
+		return CACHE_PREFIX + sessionCacheKey + separator + tokenKey;
 	}
 
 	/**
@@ -152,40 +159,11 @@ public class CSRFService {
 		SessionBoxContext	sessionContext	= validateSessionContext( context );
 		Session				session			= sessionContext.getSession();
 
-		return getCacheProvider().clear( CACHE_PREFIX + session.getCacheKey() );
-	}
+		ICacheProvider		cacheProvider	= getCacheProvider();
 
-	/**
-	 * Reaps expired tokens from the cache.
-	 * It will find all the activeTokens storage per session and remove any expired tokens
-	 * from those storages.
-	 * <p>
-	 * This reap usually runs from a scheduler so there is no running context
-	 * so we use the runtime context for execution.
-	 */
-	public static void reap() {
-		IBoxContext	reapContext	= runtime.getRuntimeContext();
-		DateTime	now			= ( DateTime ) functionService
-		    .getGlobalFunction( KeyDictionary.now )
-		    .invoke( reapContext, false );
+		cacheProvider.clearAll( new WildcardFilter( CACHE_PREFIX + session.getCacheKey() ) );
 
-		getCacheProvider()
-		    .get( new WildcardFilter( CACHE_PREFIX ) )
-		    .entrySet()
-		    .stream()
-		    .forEach( entry -> {
-			    Key	storageKey		= entry.getKey();
-			    IStruct activeTokens = StructCaster.cast( entry.getValue() );
-
-			    getCacheProvider()
-			        .set(
-			            storageKey.getName(),
-			            activeTokens.entrySet().stream().filter( item -> {
-				            DateTime expires = new DateTime( StructCaster.cast( item.getValue() ).getAsString( Key.expires ) );
-				            return expires.getWrapped().isAfter( now.getWrapped() );
-			            } ).collect( BLCollector.toStruct() )
-			        );
-		    } );
+		return true;
 	}
 
 	/**
@@ -200,7 +178,11 @@ public class CSRFService {
 	 * @return The cache provider to use for storing CSRF tokens.
 	 */
 	private static ICacheProvider getCacheProvider() {
-		return cacheService.getCache( cacheStorage );
+		if ( cacheStorage.equals( Key.session ) ) {
+			return RequestBoxContext.getCurrent().getParentOfType( ApplicationBoxContext.class ).getApplication().getSessionsCache();
+		} else {
+			return cacheService.getCache( cacheStorage );
+		}
 	}
 
 	/**

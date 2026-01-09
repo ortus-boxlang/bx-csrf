@@ -28,6 +28,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.mockito.Mockito;
 
+import ortus.boxlang.modules.csrf.util.KeyDictionary;
 import ortus.boxlang.runtime.BoxRuntime;
 import ortus.boxlang.runtime.application.BaseApplicationListener;
 import ortus.boxlang.runtime.context.IBoxContext;
@@ -41,13 +42,17 @@ import ortus.boxlang.web.context.WebRequestBoxContext;
 import ortus.boxlang.web.exchange.BoxCookie;
 import ortus.boxlang.web.exchange.IBoxHTTPExchange;
 
+/**
+ * Use this as a base integration test for your non web-support package
+ * modules. If you want web based testing, use the BaseWebIntegrationTest
+ */
 public abstract class BaseIntegrationTest {
 
 	protected static BoxRuntime		runtime;
 	protected static ModuleService	moduleService;
 	protected static ModuleRecord	moduleRecord;
 	protected static Key			result			= new Key( "result" );
-	protected static Key			moduleName		= new Key( "csrf" );
+	protected static Key			moduleName		= KeyDictionary._MODULE_NAME;
 	protected static final String	TEST_WEBROOT	= Path.of( "src/test/resources/webroot" ).toAbsolutePath().toString();
 	protected static final String	requestURI		= "/";
 	protected WebRequestBoxContext	context;
@@ -60,6 +65,30 @@ public abstract class BaseIntegrationTest {
 		moduleService	= runtime.getModuleService();
 		// Load the module
 		loadModule( runtime.getRuntimeContext() );
+	}
+
+	@BeforeEach
+	public void setupEach() {
+		// Mock a connection
+		mockExchange = Mockito.mock( IBoxHTTPExchange.class );
+		// Mock some objects which are used in the context
+		when( mockExchange.getRequestCookies() ).thenReturn( new BoxCookie[ 0 ] );
+		when( mockExchange.getRequestHeaderMap() ).thenReturn( new HashMap<String, String[]>() );
+		when( mockExchange.getRequestMethod() ).thenReturn( "GET" );
+		when( mockExchange.getResponseWriter() ).thenReturn( new PrintWriter( OutputStream.nullOutputStream() ) );
+
+		// Create the mock contexts
+		context		= new WebRequestBoxContext( runtime.getRuntimeContext(), mockExchange, TEST_WEBROOT );
+		variables	= context.getScopeNearby( VariablesScope.name );
+
+		try {
+			context.loadApplicationDescriptor( new URI( requestURI ) );
+		} catch ( URISyntaxException e ) {
+			throw new BoxRuntimeException( "Invalid URI", e );
+		}
+
+		BaseApplicationListener appListener = context.getApplicationListener();
+		appListener.onRequestStart( context, new Object[] { requestURI } );
 	}
 
 	protected static void loadModule( IBoxContext context ) {
@@ -77,29 +106,6 @@ public abstract class BaseIntegrationTest {
 		} else {
 			System.out.println( "Module already loaded: " + moduleName );
 		}
-	}
-
-	@BeforeEach
-	public void setupEach() {
-		// Mock a connection
-		mockExchange = Mockito.mock( IBoxHTTPExchange.class );
-		// Mock some objects which are used in the context
-		when( mockExchange.getRequestCookies() ).thenReturn( new BoxCookie[ 0 ] );
-		when( mockExchange.getRequestHeaderMap() ).thenReturn( new HashMap<String, String[]>() );
-		when( mockExchange.getResponseWriter() ).thenReturn( new PrintWriter( OutputStream.nullOutputStream() ) );
-
-		// Create the mock contexts
-		context		= new WebRequestBoxContext( runtime.getRuntimeContext(), mockExchange, TEST_WEBROOT );
-		variables	= context.getScopeNearby( VariablesScope.name );
-
-		try {
-			context.loadApplicationDescriptor( new URI( requestURI ) );
-		} catch ( URISyntaxException e ) {
-			throw new BoxRuntimeException( "Invalid URI", e );
-		}
-
-		BaseApplicationListener appListener = context.getApplicationListener();
-		appListener.onRequestStart( context, new Object[] { requestURI } );
 	}
 
 }
