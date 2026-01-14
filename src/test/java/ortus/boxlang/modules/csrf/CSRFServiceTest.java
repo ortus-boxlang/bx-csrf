@@ -98,7 +98,7 @@ public class CSRFServiceTest extends BaseIntegrationTest {
 
 		    // Get current time and set token to expire in 120 seconds (beyond 60 second timeoutSkew)
 		    now = now();
-		    expiration = dateAdd( "s", 120, now );
+		    expiration = dateAdd( "s", 240, now );
 
 		    // Create new cache entry with expiration beyond timeoutSkew
 		    tokenStruct = {
