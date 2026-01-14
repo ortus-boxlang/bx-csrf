@@ -21,7 +21,7 @@ public class CSRFServiceTest extends BaseIntegrationTest {
 		    tokenKey = "testTimeoutSkew";
 		    token1 = CSRFGenerateToken( tokenKey );
 
-		    // Now directly manipulate the cache entry to have an expiration within timeoutSkew (60 seconds)
+		    // Now directly manipulate the cache entry to have an expiration within timeoutSkew (120 seconds)
 		    // Get the session context and cache provider from the runtime
 		    requestContext = getBoxContext();
 		    sessionContext = requestContext.getParentOfType( createObject( "java", "ortus.boxlang.runtime.context.SessionBoxContext" ) );
@@ -32,7 +32,7 @@ public class CSRFServiceTest extends BaseIntegrationTest {
 		    session = sessionContext.getSession();
 		    cacheKey = "bl_csrf_tokens_" & session.getCacheKey() & "_" & tokenKey;
 
-		    // Get current time and set token to expire in 30 seconds (within 60 second timeoutSkew)
+		    // Get current time and set token to expire in 30 seconds (within 120 second timeoutSkew)
 		    now = now();
 		    expiration = dateAdd( "s", 30, now );
 
@@ -85,7 +85,7 @@ public class CSRFServiceTest extends BaseIntegrationTest {
 		    tokenKey = "testBeyondTimeoutSkew";
 		    token1 = CSRFGenerateToken( tokenKey );
 
-		    // Now directly manipulate the cache entry to have an expiration beyond timeoutSkew (60 seconds)
+		    // Now directly manipulate the cache entry to have an expiration beyond timeoutSkew (120 seconds)
 		    // Get the session context and cache provider from the runtime
 		    requestContext = getBoxContext();
 		    sessionContext = requestContext.getParentOfType( createObject( "java", "ortus.boxlang.runtime.context.SessionBoxContext" ) );
@@ -96,7 +96,7 @@ public class CSRFServiceTest extends BaseIntegrationTest {
 		    session = sessionContext.getSession();
 		    cacheKey = "bl_csrf_tokens_" & session.getCacheKey() & "_" & tokenKey;
 
-		    // Get current time and set token to expire in 120 seconds (beyond 60 second timeoutSkew)
+		    // Get current time and set token to expire in 120 seconds (beyond 120 second timeoutSkew)
 		    now = now();
 		    expiration = dateAdd( "s", 240, now );
 
