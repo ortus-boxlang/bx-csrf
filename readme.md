@@ -26,7 +26,7 @@ The module may be configured using the following settings in your `boxlang.json`
 			// The interval in minutes to rotate the token if autoRotate is enabled
 			"rotationInterval" : 30,
 			// The interval in seconds within which, if a token's expiration is impending, we force generate new token for the user.
-			"timeoutSkew" : 60,
+			"timeoutSkew" : 120,
 			// Whether the the presence of the token should be verified automatically for the verifyMethods
 			"autoVerify" : false,
 			// The name of the header to check for automatic token verification, if applicable
