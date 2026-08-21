@@ -78,6 +78,8 @@ class {
 			"reapFrequency" : 1,
 			// By default, all csrf tokens have a life-span of 30 minutes. After 30 minutes, they expire and we auto-generate new ones.
 			"rotationInterval" : 30,
+			// The interval in seconds within which, if a token's expiration is impending, we force generate new token for the user.
+			"timeoutSkew" : 120,
 			// Whether the the presence of the token should be verified automatically for the verifyMethods
 			"autoVerify" : false,
 			// The name of the header to check for automatic token verification, if applicable

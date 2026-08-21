@@ -44,6 +44,7 @@ public class CSRFService {
 	private static IStruct			moduleSettings;
 	private static Key				cacheStorage;
 	private static Long				rotationInterval;
+	private static int				timeoutSkew;
 
 	static {
 		runtime				= BoxRuntime.getInstance();
@@ -53,6 +54,7 @@ public class CSRFService {
 		moduleSettings		= moduleService.getModuleSettings( KeyDictionary._MODULE_NAME );
 		cacheStorage		= Key.of( moduleSettings.getAsString( KeyDictionary.cacheStorage ) );
 		rotationInterval	= LongCaster.cast( moduleSettings.get( KeyDictionary.rotationInterval ) );
+		timeoutSkew			= moduleSettings.getAsInteger( KeyDictionary.timeoutSkew );
 	}
 
 	/**
@@ -81,6 +83,15 @@ public class CSRFService {
 
 		// Get the token storage from the cache with the active tokens only
 		IStruct				activeToken		= StructCaster.cast( cacheProvider.getOrSet( cacheKey, Struct::new ) );
+
+		// Check if the existing token is about to expire within the timeout skew interval
+		if ( !activeToken.isEmpty() ) {
+			DateTime	expires			= new DateTime( activeToken.getAsString( Key.expires ) );
+			DateTime	skewThreshold	= now.clone().modify( "s", LongCaster.cast( timeoutSkew ) );
+			if ( expires.getWrapped().isBefore( skewThreshold.getWrapped() ) ) {
+				forceNew = true;
+			}
+		}
 
 		// If the token doesn't exist or we're forcing a new one, generate a new token
 		if ( forceNew || activeToken.isEmpty() ) {

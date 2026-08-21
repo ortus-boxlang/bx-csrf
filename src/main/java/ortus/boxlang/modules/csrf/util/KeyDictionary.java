@@ -40,6 +40,7 @@ public class KeyDictionary {
 	public static final Key	randRange			= Key.of( "randRange" );
 	public static final Key	reapFrequency		= Key.of( "reapFrequency" );
 	public static final Key	rotationInterval	= Key.of( "rotationInterval" );
+	public static final Key	timeoutSkew			= Key.of( "timeoutSkew" );
 	public static final Key	session				= Key.of( "session" );
 	public static final Key	verifyMethods		= Key.of( "verifyMethods" );
 
