@@ -96,7 +96,7 @@ public class CSRFServiceTest extends BaseIntegrationTest {
 		    session = sessionContext.getSession();
 		    cacheKey = "bl_csrf_tokens_" & session.getCacheKey() & "_" & tokenKey;
 
-		    // Get current time and set token to expire in 120 seconds (beyond 120 second timeoutSkew)
+		    // Get current time and set token to expire in 240 seconds (beyond 120 second timeoutSkew)
 		    now = now();
 		    expiration = dateAdd( "s", 240, now );
 
